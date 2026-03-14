@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WFCrypto — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #080c10;
+    --bg2: #0d1219;
+    --bg3: #111820;
+    --surface: rgba(16,24,36,0.7);
+    --border: rgba(56,165,255,0.12);
+    --border2: rgba(56,165,255,0.22);
+    --accent: #00e5ff;
+    --accent2: #0af5b0;
+    --accent3: #3d8bff;
+    --green: #00e09a;
+    --red: #ff4560;
+    --text: #e8f0fe;
+    --text2: #7d9ab8;
+    --text3: #3f5a78;
+    --gold: #ffd060;
+    --mono: 'JetBrains Mono', monospace;
+    --head: 'Syne', sans-serif;
+  }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--head);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,255,0.028) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.028) 1px, transparent 1px);
+    background-size: 44px 44px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0,100,200,0.08) 0%, transparent 70%),
+                radial-gradient(ellipse 40% 40% at 90% 90%, rgba(0,229,255,0.04) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .page-wrap { position: relative; z-index: 1; max-width: 1280px; margin: 0 auto; padding: 0 20px; }
+
+  /* HEADER */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 0 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo { display: flex; align-items: center; gap: 10px; }
+
+  .logo-icon {
+    width: 34px; height: 34px;
+    background: linear-gradient(135deg, var(--accent), var(--accent3));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    animation: logoGlow 3s ease-in-out infinite;
+  }
+
+  @keyframes logoGlow {
+    0%,100% { box-shadow: 0 0 18px rgba(0,229,255,0.35); }
+    50% { box-shadow: 0 0 28px rgba(0,229,255,0.6); }
+  }
+
+  .logo-text {
+    font-size: 20px; font-weight: 800; letter-spacing: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent3));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+
+  .logo-badge { font-family: var(--mono); font-size: 9px; color: var(--text3); letter-spacing: 1px; margin-top: 2px; }
+
+  .header-actions { display: flex; gap: 10px; align-items: center; }
+
+  .btn {
+    font-family: var(--head); font-size: 13px; font-weight: 600;
+    padding: 8px 18px; border-radius: 8px; border: none; cursor: pointer;
+    transition: all 0.2s; letter-spacing: 0.5px;
+  }
+
+  .btn-outline { background: transparent; border: 1px solid var(--border2); color: var(--text); }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent3), var(--accent));
+    color: #030810; box-shadow: 0 4px 15px rgba(0,229,255,0.2);
+  }
+
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,229,255,0.35); }
+
+  .live-dot {
+    width: 8px; height: 8px; background: var(--green);
+    border-radius: 50%; box-shadow: 0 0 8px var(--green); animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%,100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(0.85); }
+  }
+
+  /* TICKER */
+  .ticker-wrap {
+    border-bottom: 1px solid var(--border); overflow: hidden;
+    background: linear-gradient(90deg, var(--bg) 0%, var(--bg2) 50%, var(--bg) 100%);
+    position: relative;
+  }
+
+  .ticker-wrap::before, .ticker-wrap::after {
+    content: ''; position: absolute; top: 0; bottom: 0; width: 80px; z-index: 2; pointer-events: none;
+  }
+
+  .ticker-wrap::before { left: 0; background: linear-gradient(90deg, var(--bg), transparent); }
+  .ticker-wrap::after { right: 0; background: linear-gradient(-90deg, var(--bg), transparent); }
+
+  .ticker-track {
+    display: flex; gap: 0;
+    animation: tickerScroll 38s linear infinite;
+    width: max-content; padding: 0;
+  }
+
+  .ticker-track:hover { animation-play-state: paused; }
+
+  @keyframes tickerScroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  .ticker-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 28px; border-right: 1px solid var(--border);
+    white-space: nowrap; cursor: pointer; transition: background 0.2s;
+  }
+
+  .ticker-item:hover { background: rgba(0,229,255,0.04); }
+  .ticker-flag { font-size: 18px; line-height: 1; }
+  .ticker-code { font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--text2); letter-spacing: 1px; }
+  .ticker-rate { font-family: var(--mono); font-size: 13px; font-weight: 500; color: var(--text); }
+  .ticker-change { font-family: var(--mono); font-size: 10px; font-weight: 500; padding: 2px 6px; border-radius: 4px; }
+  .up { color: var(--green); background: rgba(0,224,154,0.1); }
+  .dn { color: var(--red); background: rgba(255,69,96,0.1); }
+
+  /* MAIN */
+  .main { padding: 28px 0 60px; }
+
+  /* STATS */
+  .stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 28px; }
+
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 18px 20px; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    position: relative; overflow: hidden; transition: border-color 0.2s, transform 0.2s;
+  }
+
+  .stat-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0; transition: opacity 0.2s;
+  }
+
+  .stat-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+  .stat-card:hover::before { opacity: 1; }
+
+  .stat-label { font-size: 11px; color: var(--text3); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; font-family: var(--mono); }
+  .stat-value { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 6px; font-family: var(--mono); }
+  .stat-sub { font-size: 12px; color: var(--text2); display: flex; align-items: center; gap: 6px; }
+  .stat-icon { position: absolute; top: 14px; right: 16px; font-size: 22px; opacity: 0.15; }
+
+  /* TABS */
+  .tabs-bar {
+    display: flex; gap: 4px; margin-bottom: 22px;
+    background: var(--bg2); padding: 5px; border-radius: 12px;
+    width: fit-content; border: 1px solid var(--border);
+  }
+
+  .tab-btn {
+    font-family: var(--head); font-size: 14px; font-weight: 600;
+    padding: 10px 28px; border-radius: 8px; border: none; cursor: pointer;
+    transition: all 0.25s; letter-spacing: 1px; color: var(--text2); background: transparent;
+  }
+
+  .tab-btn.active {
+    background: linear-gradient(135deg, rgba(0,229,255,0.15), rgba(61,139,255,0.15));
+    color: var(--accent); border: 1px solid var(--border2); box-shadow: 0 2px 12px rgba(0,229,255,0.1);
+  }
+
+  .tab-btn:not(.active):hover { color: var(--text); }
+
+  /* SEARCH */
+  .search-row { display: flex; gap: 12px; margin-bottom: 20px; align-items: center; }
+  .search-wrap { position: relative; flex: 1; }
+  .search-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text3); font-size: 16px; pointer-events: none; }
+
+  .search-input {
+    width: 100%; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 13px 16px 13px 46px; color: var(--text);
+    font-family: var(--mono); font-size: 14px; outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s; backdrop-filter: blur(12px);
+  }
+
+  .search-input::placeholder { color: var(--text3); }
+  .search-input:focus { border-color: var(--border2); box-shadow: 0 0 0 3px rgba(0,229,255,0.07); }
+
+  .filter-btns { display: flex; gap: 8px; }
+
+  .filter-btn {
+    font-family: var(--mono); font-size: 11px; font-weight: 500;
+    padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--text2); cursor: pointer;
+    transition: all 0.2s; letter-spacing: 0.5px; backdrop-filter: blur(8px); white-space: nowrap;
+  }
+
+  .filter-btn:hover, .filter-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(0,229,255,0.06); }
+
+  /* TABLE */
+  .crypto-table-wrap {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+    overflow: hidden; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  }
+
+  .table-header {
+    display: grid; grid-template-columns: 40px 2fr 1.2fr 1fr 1.4fr 1fr;
+    gap: 12px; padding: 14px 20px; border-bottom: 1px solid var(--border);
+    font-family: var(--mono); font-size: 10px; color: var(--text3); letter-spacing: 1.2px; text-transform: uppercase;
+  }
+
+  .crypto-row {
+    display: grid; grid-template-columns: 40px 2fr 1.2fr 1fr 1.4fr 1fr;
+    gap: 12px; padding: 14px 20px; border-bottom: 1px solid var(--border);
+    align-items: center; transition: background 0.18s; cursor: pointer;
+  }
+
+  .crypto-row:last-child { border-bottom: none; }
+  .crypto-row:hover { background: rgba(0,229,255,0.035); }
+
+  .cr-rank { font-family: var(--mono); font-size: 12px; color: var(--text3); font-weight: 500; }
+  .cr-name { display: flex; align-items: center; gap: 12px; }
+
+  .cr-logo {
+    width: 34px; height: 34px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px; flex-shrink: 0;
+  }
+
+  .cr-fullname { font-size: 14px; font-weight: 600; color: var(--text); }
+  .cr-sym { font-family: var(--mono); font-size: 11px; color: var(--text3); letter-spacing: 0.5px; }
+  .cr-price { font-family: var(--mono); font-size: 14px; font-weight: 600; color: var(--text); }
+  .cr-change { font-family: var(--mono); font-size: 13px; font-weight: 600; }
+  .cr-cap { font-family: var(--mono); font-size: 12px; color: var(--text2); }
+  .cr-sparkline { display: flex; align-items: center; gap: 8px; }
+
+  /* NFT SECTION */
+  .nft-section { display: none; }
+  .nft-section.active { display: block; }
+  .wallet-section.hidden { display: none; }
+
+  .nft-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .nft-title { font-size: 22px; font-weight: 700; }
+  .nft-title span { color: var(--accent); }
+  .nft-filters { display: flex; gap: 8px; }
+
+  .nft-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 18px; }
+
+  .nft-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+    overflow: hidden; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s; cursor: pointer;
+  }
+
+  .nft-card:hover { border-color: var(--accent); transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,229,255,0.12); }
+
+  .nft-img-wrap { position: relative; aspect-ratio: 1; overflow: hidden; }
+
+  .nft-img-placeholder {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center; font-size: 60px;
+  }
+
+  .nft-badge {
+    position: absolute; top: 12px; right: 12px;
+    background: rgba(0,0,0,0.65); backdrop-filter: blur(8px);
+    border: 1px solid var(--border2); border-radius: 20px; padding: 4px 10px;
+    font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--accent);
+  }
+
+  .nft-like {
+    position: absolute; top: 12px; left: 12px;
+    background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+    border-radius: 20px; padding: 5px 10px; font-size: 12px; color: var(--text2);
+    cursor: pointer; transition: all 0.2s;
+  }
+
+  .nft-like:hover { color: #ff6b8a; }
+  .nft-info { padding: 14px 16px; }
+  .nft-name { font-size: 15px; font-weight: 700; margin-bottom: 3px; }
+  .nft-collection { font-size: 12px; color: var(--accent3); margin-bottom: 12px; font-family: var(--mono); }
+  .nft-bottom { display: flex; justify-content: space-between; align-items: center; }
+  .nft-price-label { font-family: var(--mono); font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
+  .nft-price-val { font-family: var(--mono); font-size: 15px; font-weight: 700; color: var(--text); }
+  .nft-price-usd { font-family: var(--mono); font-size: 11px; color: var(--text3); }
+
+  .btn-bid {
+    font-family: var(--mono); font-size: 12px; font-weight: 600;
+    padding: 8px 16px; border-radius: 8px; border: 1px solid var(--accent);
+    background: rgba(0,229,255,0.06); color: var(--accent); cursor: pointer;
+    transition: all 0.2s; letter-spacing: 0.5px;
+  }
+
+  .btn-bid:hover { background: rgba(0,229,255,0.14); box-shadow: 0 4px 14px rgba(0,229,255,0.15); }
+
+  /* BOTTOM GRID */
+  .bottom-grid { display: grid; grid-template-columns: 1fr 340px; gap: 18px; margin-top: 20px; }
+
+  .portfolio-card, .news-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+    padding: 22px; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  }
+
+  .card-title { font-size: 16px; font-weight: 700; margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; }
+  .card-title-label { color: var(--text2); font-size: 12px; font-family: var(--mono); }
+  .portfolio-donut-wrap { display: flex; gap: 24px; align-items: center; }
+  .donut-legend { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+  .donut-item { display: flex; align-items: center; gap: 10px; }
+  .donut-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .donut-name { font-size: 13px; flex: 1; }
+  .donut-pct { font-family: var(--mono); font-size: 13px; font-weight: 600; color: var(--text); }
+
+  .news-item { padding: 12px 0; border-bottom: 1px solid var(--border); cursor: pointer; transition: opacity 0.2s; }
+  .news-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .news-item:hover { opacity: 0.78; }
+  .news-tag { font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 5px; }
+  .news-headline { font-size: 13px; line-height: 1.5; color: var(--text); margin-bottom: 4px; }
+  .news-time { font-family: var(--mono); font-size: 10px; color: var(--text3); }
+
+  /* VOL BAR */
+  .vol-bar-wrap { height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; overflow: hidden; margin-top: 6px; }
+  .vol-bar-fill { height: 100%; border-radius: 2px; }
+
+  /* STATUS BAR */
+  .status-bar {
+    border-top: 1px solid var(--border); padding: 10px 0;
+    display: flex; align-items: center; gap: 24px;
+    font-family: var(--mono); font-size: 11px; color: var(--text3);
+  }
+
+  .status-item { display: flex; align-items: center; gap: 6px; }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+  /* ANIMATIONS */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .fade-up { animation: fadeInUp 0.4s ease both; }
+  .fade-up:nth-child(1) { animation-delay: 0.05s; }
+  .fade-up:nth-child(2) { animation-delay: 0.1s; }
+  .fade-up:nth-child(3) { animation-delay: 0.15s; }
+  .fade-up:nth-child(4) { animation-delay: 0.2s; }
+
+  @keyframes priceFlashGreen {
+    0%,100% { color: var(--text); }
+    50% { color: var(--green); text-shadow: 0 0 8px rgba(0,224,154,0.5); }
+  }
+
+  @keyframes priceFlashRed {
+    0%,100% { color: var(--text); }
+    50% { color: var(--red); text-shadow: 0 0 8px rgba(255,69,96,0.5); }
+  }
+
+  .flash-green { animation: priceFlashGreen 0.7s ease; }
+  .flash-red { animation: priceFlashRed 0.7s ease; }
+  .tab-content { animation: fadeInUp 0.3s ease; }
+
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--text3); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text2); }
+
+  /* RESPONSIVE */
+  @media (max-width: 1024px) {
+    .stats-row { grid-template-columns: repeat(2,1fr); }
+    .nft-grid { grid-template-columns: repeat(2,1fr); }
+    .bottom-grid { grid-template-columns: 1fr; }
+    .table-header, .crypto-row { grid-template-columns: 40px 2fr 1.2fr 1fr; }
+    .table-header > :nth-child(5), .table-header > :nth-child(6),
+    .crypto-row > :nth-child(5), .crypto-row > :nth-child(6) { display: none; }
+  }
+
+  @media (max-width: 640px) {
+    .stats-row { grid-template-columns: repeat(2,1fr); gap: 10px; }
+    .nft-grid { grid-template-columns: 1fr; }
+    .header-actions .btn-outline { display: none; }
+    .filter-btns { display: none; }
+    .table-header, .crypto-row { grid-template-columns: 36px 2fr 1.2fr; }
+    .table-header > :nth-child(4), .table-header > :nth-child(5), .table-header > :nth-child(6),
+    .crypto-row > :nth-child(4), .crypto-row > :nth-child(5), .crypto-row > :nth-child(6) { display: none; }
+    .nft-header { flex-direction: column; gap: 12px; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-wrap">
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo">
+      <div class="logo-icon">◈</div>
+      <div>
+        <div class="logo-text">WFCrypto</div>
+        <div class="logo-badge">by WFStudio · v1.0</div>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <div class="live-dot" title="Live Data"></div>
+      <a href="https://opensea.io" target="_blank" rel="noopener noreferrer" class="btn btn-outline">🎨 NFT</a>
+      <a href="login.html" class="btn btn-outline">Log In</a>
+      <a href="register.html" class="btn btn-primary">Sign Up</a>
+    </div>
+  </header>
+
+  <!-- TICKER -->
+  <div class="ticker-wrap">
+    <div class="ticker-track" id="tickerTrack"></div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat-card fade-up">
+        <div class="stat-icon">🌐</div>
+        <div class="stat-label">Market Cap</div>
+        <div class="stat-value" id="statMarketCap">$2.84T</div>
+        <div class="stat-sub"><span class="up" id="statCapChange">▲ 3.42%</span><span style="color:var(--text3)">24h</span></div>
+      </div>
+      <div class="stat-card fade-up">
+        <div class="stat-icon">📊</div>
+        <div class="stat-label">24h Volume</div>
+        <div class="stat-value" id="statVolume">$148.5B</div>
+        <div class="stat-sub"><span class="dn" id="statVolChange">▼ 1.18%</span><span style="color:var(--text3)">vs yesterday</span></div>
+      </div>
+      <div class="stat-card fade-up">
+        <div class="stat-icon">₿</div>
+        <div class="stat-label">BTC Dominance</div>
+        <div class="stat-value" id="statBTCDom">54.7%</div>
+        <div class="stat-sub"><span class="up" id="statDomChange">▲ 0.4%</span><span style="color:var(--text3)">weekly</span></div>
+      </div>
+      <div class="stat-card fade-up">
+        <div class="stat-icon">💎</div>
+        <div class="stat-label">Fear & Greed</div>
+        <div class="stat-value" style="color:var(--green)" id="statFG">72 <span style="font-size:14px">Greed</span></div>
+        <div class="stat-sub" style="gap:0"><div class="vol-bar-wrap" style="flex:1"><div class="vol-bar-fill" style="width:72%;background:linear-gradient(90deg,var(--red),var(--gold),var(--green))"></div></div></div>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs-bar">
+      <button class="tab-btn active" id="tabWallet" onclick="switchTab('wallet')">⬡ WALLET</button>
+      <button class="tab-btn" id="tabNFT" onclick="switchTab('nft')">◈ NFT</button>
+    </div>
+
+    <!-- WALLET SECTION -->
+    <div class="wallet-section tab-content" id="walletSection">
+
+      <div class="search-row">
+        <div class="search-wrap">
+          <div class="search-icon">🔍</div>
+          <input class="search-input" id="searchInput" type="text" placeholder="Search crypto or fiat..." autocomplete="off" oninput="filterCrypto()">
+        </div>
+        <div class="filter-btns">
+          <button class="filter-btn active" onclick="setFilter(this,'all')">All</button>
+          <button class="filter-btn" onclick="setFilter(this,'top')">Top 10</button>
+          <button class="filter-btn" onclick="setFilter(this,'defi')">DeFi</button>
+          <button class="filter-btn" onclick="setFilter(this,'layer1')">Layer 1</button>
+        </div>
+      </div>
+
+      <div class="crypto-table-wrap">
+        <div class="table-header">
+          <div>#</div>
+          <div>Asset</div>
+          <div>Price</div>
+          <div>24h Change</div>
+          <div>Market Cap</div>
+          <div>7d Chart</div>
+        </div>
+        <div id="cryptoList"></div>
+      </div>
+
+      <div class="bottom-grid">
+        <div class="portfolio-card">
+          <div class="card-title">Portfolio Overview <span class="card-title-label">Updated now</span></div>
+          <div class="portfolio-donut-wrap">
+            <canvas id="donutCanvas" width="130" height="130" style="flex-shrink:0"></canvas>
+            <div class="donut-legend" id="donutLegend"></div>
+          </div>
+        </div>
+        <div class="news-card">
+          <div class="card-title">Market Intel <span class="card-title-label" style="color:var(--red)">● LIVE</span></div>
+          <div id="newsFeed"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- NFT SECTION -->
+    <div class="nft-section tab-content" id="nftSection">
+
+      <div class="nft-header">
+        <div class="nft-title">NFT <span>Marketplace</span></div>
+        <div class="nft-filters">
+          <button class="filter-btn active">All</button>
+          <button class="filter-btn">Art</button>
+          <button class="filter-btn">Music</button>
+          <button class="filter-btn">Gaming</button>
+        </div>
+      </div>
+
+      <div class="nft-grid" id="nftGrid"></div>
+      <div style="text-align: center; margin-top: 30px; padding: 20px; border-top: 1px solid var(--border);">
+        <a href="https://opensea.io" target="_blank" rel="noopener noreferrer" style="color: var(--accent); text-decoration: none; font-size: 14px;">
+          🔗 Browse more NFTs on OpenSea →
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- STATUS BAR -->
+  <div class="status-bar">
+    <div class="status-item"><div class="status-dot" style="background:var(--green)"></div>Exchange Online</div>
+    <div class="status-item"><div class="status-dot" style="background:var(--green)"></div>WS Connected</div>
+    <div class="status-item"><div class="status-dot" style="background:var(--gold)"></div>Latency: 12ms</div>
+    <div class="status-item">Block: #19,842,310</div>
+    <div class="status-item" style="margin-left:auto;color:var(--text2)" id="clockEl"></div>
+  </div>
+
+</div>
+
+<script>
+// FIAT CURRENCIES
+const FIAT = [
+  {flag:'🇺🇸',code:'USD',rate:1,change:0},
+  {flag:'🇪🇺',code:'EUR',rate:0.9182,change:+0.12},
+  {flag:'🇷🇺',code:'RUB',rate:91.42,change:-0.34},
+  {flag:'🇦🇲',code:'AMD',rate:388.50,change:+0.09},
+  {flag:'🇬🇧',code:'GBP',rate:0.7864,change:-0.07},
+  {flag:'🇯🇵',code:'JPY',rate:149.88,change:-0.21},
+  {flag:'🇨🇳',code:'CNY',rate:7.2134,change:+0.05},
+  {flag:'🇨🇭',code:'CHF',rate:0.8931,change:+0.03},
+  {flag:'🇦🇺',code:'AUD',rate:1.5403,change:-0.14},
+  {flag:'🇨🇦',code:'CAD',rate:1.3627,change:+0.08},
+];
+
+// CRYPTOCURRENCIES
+let CRYPTOS = [
+  {rank:1,  logo:'₿', bg:'linear-gradient(135deg,#f7931a,#ffb347)',name:'Bitcoin',   sym:'BTC', price:67842.40,change:+3.18,cap:'$1.34T', tag:'layer1', marketCap:1340000000000},
+  {rank:2,  logo:'Ξ', bg:'linear-gradient(135deg,#627eea,#a0b4ff)',name:'Ethereum',  sym:'ETH', price:3584.22, change:+2.04,cap:'$431.2B',tag:'layer1', marketCap:431200000000},
+  {rank:3,  logo:'◎', bg:'linear-gradient(135deg,#9945ff,#c86dd7)',name:'Solana',    sym:'SOL', price:184.73,  change:+5.67,cap:'$85.6B', tag:'layer1', marketCap:85600000000},
+  {rank:4,  logo:'B', bg:'linear-gradient(135deg,#f3ba2f,#fcd535)',name:'BNB',       sym:'BNB', price:598.44,  change:+1.22,cap:'$90.1B', tag:'layer1', marketCap:90100000000},
+  {rank:5,  logo:'$', bg:'linear-gradient(135deg,#26a17b,#4ecca3)',name:'USDT',      sym:'USDT',price:1.0001,  change:+0.01,cap:'$118.4B',tag:'defi', marketCap:118400000000},
+  {rank:6,  logo:'✦', bg:'linear-gradient(135deg,#0033ad,#3b5fe2)',name:'XRP',       sym:'XRP', price:0.6234,  change:-0.88,cap:'$34.2B', tag:'layer1', marketCap:34200000000},
+  {rank:7,  logo:'⬡', bg:'linear-gradient(135deg,#e84142,#ff6b6b)',name:'Avalanche', sym:'AVAX',price:38.96,   change:+6.43,cap:'$15.9B', tag:'layer1', marketCap:15900000000},
+  {rank:8,  logo:'◈', bg:'linear-gradient(135deg,#ff6b00,#ffaa00)',name:'Chainlink', sym:'LINK',price:14.82,   change:+4.11,cap:'$9.3B',  tag:'defi', marketCap:9300000000},
+  {rank:9,  logo:'◉', bg:'linear-gradient(135deg,#7b3fe4,#a06be9)',name:'Polkadot',  sym:'DOT', price:7.43,    change:-1.34,cap:'$10.4B', tag:'layer1', marketCap:10400000000},
+  {rank:10, logo:'▲', bg:'linear-gradient(135deg,#29b6af,#00e5cc)',name:'Uniswap',   sym:'UNI', price:9.27,    change:+2.88,cap:'$7.1B',  tag:'defi', marketCap:7100000000},
+];
+
+const NFTS = [
+  {emoji:'🐱',bg:'linear-gradient(135deg,#1a0533,#3d0f7a)',name:'Neon Cat #4821',  collection:'CryptoCats',   price:'2.4 ETH', usd:'$8,601', badge:'#4821', opensea:'https://opensea.io/assets/ethereum/0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d/4821'},
+  {emoji:'👾',bg:'linear-gradient(135deg,#001f3f,#0a3d62)',name:'Pixel Alien #017', collection:'Alien Worlds', price:'1.8 ETH', usd:'$6,451', badge:'Rare', opensea:'https://opensea.io/assets/ethereum/0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d/17'},
+  {emoji:'🦊',bg:'linear-gradient(135deg,#2d0b00,#7a2700)',name:'Fox Samurai #309', collection:'FoxWarriors',  price:'3.1 ETH', usd:'$11,111',badge:'Epic', opensea:'https://opensea.io/assets/ethereum/0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d/309'},
+  {emoji:'🌌',bg:'linear-gradient(135deg,#020420,#0d1b5e)',name:'Cosmic Void #55',  collection:'SpaceDAO',     price:'5.0 ETH', usd:'$17,921',badge:'🔥 Hot', opensea:'https://opensea.io/assets/ethereum/0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d/55'},
+  {emoji:'🤖',bg:'linear-gradient(135deg,#0a2400,#1f5e00)',name:'MechBot #1138',    collection:'MetaRobots',   price:'0.95 ETH',usd:'$3,406', badge:'New', opensea:'https://opensea.io/assets/ethereum/0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d/1138'},
+  {emoji:'🐉',bg:'linear-gradient(135deg,#1a0000,#5e0000)',name:'Dragon Lord #007', collection:'DragonRealm',  price:'4.2 ETH', usd:'$15,053',badge:'Legendary', opensea:'https://opensea.io/assets/ethereum/0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d/7'},
+];
+
+const NEWS = [
+  {tag:'BITCOIN',    tagColor:'#f7931a', headline:'Bitcoin eyes $70K as institutional inflows hit 3-month high',      time:'2 min ago'},
+  {tag:'ETHEREUM',   tagColor:'#627eea', headline:'ETH staking yields up 18% following latest protocol upgrade',      time:'14 min ago'},
+  {tag:'DEFI',       tagColor:'#00e09a', headline:'Total DeFi TVL crosses $110B for first time this quarter',         time:'31 min ago'},
+  {tag:'REGULATION', tagColor:'#ff6b6b', headline:'EU MiCA compliance deadline approaches — exchanges scramble',      time:'1 hr ago'},
+];
+
+const DONUT = [
+  {name:'Bitcoin',  pct:44, color:'#f7931a'},
+  {name:'Ethereum', pct:28, color:'#627eea'},
+  {name:'Solana',   pct:12, color:'#9945ff'},
+  {name:'Other',    pct:16, color:'#3f5a78'},
+];
+
+// ========== REAL PRICES FROM BINANCE ==========
+async function fetchBinancePrices() {
+  try {
+    const symbols = CRYPTOS.map(c => c.sym + 'USDT').join('","');
+    const response = await fetch(`https://api.binance.com/api/v3/ticker/price?symbols=["${symbols}"]`);
+    const data = await response.json();
+    
+    data.forEach(item => {
+      const sym = item.symbol.replace('USDT', '');
+      const crypto = CRYPTOS.find(c => c.sym === sym);
+      if (crypto) {
+        crypto.price = parseFloat(item.price);
+      }
+    });
+    
+    const changeResponse = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbols=["${symbols}"]`);
+    const changeData = await changeResponse.json();
+    
+    changeData.forEach(item => {
+      const sym = item.symbol.replace('USDT', '');
+      const crypto = CRYPTOS.find(c => c.sym === sym);
+      if (crypto) {
+        crypto.change = parseFloat(item.priceChangePercent);
+      }
+    });
+    
+    const totalCap = CRYPTOS.reduce((sum, c) => sum + (c.marketCap || 0), 0);
+    document.getElementById('statMarketCap').textContent = '$' + (totalCap / 1e12).toFixed(2) + 'T';
+    
+    const btcDom = (CRYPTOS.find(c => c.sym === 'BTC').marketCap / totalCap * 100).toFixed(1);
+    document.getElementById('statBTCDom').textContent = btcDom + '%';
+    
+    renderCryptoList(CRYPTOS);
+  } catch (error) {
+    console.log('Using demo prices (Binance API error)');
+    simulatePrices();
+  }
+}
+
+// BUILD TICKER
+function buildTicker() {
+  const t = document.getElementById('tickerTrack');
+  const items = [...FIAT, ...FIAT];
+  t.innerHTML = items.map(f => {
+    const sign = f.change >= 0 ? '▲' : '▼';
+    const cls  = f.change >= 0 ? 'up' : 'dn';
+    const val  = f.rate >= 100 ? f.rate.toFixed(2) : f.rate >= 10 ? f.rate.toFixed(3) : f.rate.toFixed(4);
+    return `<div class="ticker-item">
+      <span class="ticker-flag">${f.flag}</span>
+      <span class="ticker-code">${f.code}</span>
+      <span class="ticker-rate">${val}</span>
+      <span class="ticker-change ${cls}">${sign} ${Math.abs(f.change).toFixed(2)}%</span>
+    </div>`;
+  }).join('');
+}
+
+// SPARKLINE SVG
+function sparklineSVG(up, color) {
+  const pts = Array.from({length:10}, () => Math.random() * 28 + 2);
+  if (up) pts[9] = Math.max(...pts) - 1;
+  else    pts[9] = Math.min(...pts) + 1;
+  const min = Math.min(...pts), max = Math.max(...pts);
+  const norm = pts.map(p => 30 - ((p - min) / (max - min)) * 26);
+  const path = norm.map((y, i) => `${i===0?'M':'L'} ${i*5.5} ${y}`).join(' ');
+  return `<svg width="55" height="30" viewBox="0 0 55 30" style="opacity:.85">
+    <path d="${path}" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>`;
+}
+
+// RENDER CRYPTO LIST
+let filterTag = 'all';
+
+function renderCryptoList(list) {
+  const el = document.getElementById('cryptoList');
+  el.innerHTML = list.map(c => {
+    const up  = c.change >= 0;
+    const chg = (up ? '+' : '') + c.change.toFixed(2) + '%';
+    const price = c.price >= 1000
+      ? '$' + c.price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})
+      : c.price >= 1 ? '$' + c.price.toFixed(2)
+      : '$' + c.price.toFixed(4);
+
+    return `<div class="crypto-row">
+      <div class="cr-rank">${c.rank}</div>
+      <div class="cr-name">
+        <div class="cr-logo" style="background:${c.bg}">${c.logo}</div>
+        <div>
+          <div class="cr-fullname">${c.name}</div>
+          <div class="cr-sym">${c.sym}</div>
+        </div>
+      </div>
+      <div class="cr-price" id="price-${c.sym}">${price}</div>
+      <div class="cr-change ${up?'up':'dn'}">${chg}</div>
+      <div class="cr-cap">${c.cap}</div>
+      <div class="cr-sparkline">${sparklineSVG(up, up?'#00e09a':'#ff4560')}</div>
+    </div>`;
+  }).join('');
+}
+
+function filterCrypto() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const list = CRYPTOS.filter(c =>
+    (filterTag === 'all' || filterTag === 'top' ? true : c.tag === filterTag) &&
+    (filterTag === 'top' ? c.rank <= 10 : true) &&
+    (c.name.toLowerCase().includes(q) || c.sym.toLowerCase().includes(q))
+  );
+  renderCryptoList(list);
+}
+
+function setFilter(btn, tag) {
+  document.querySelectorAll('.filter-btns .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  filterTag = tag;
+  filterCrypto();
+}
+
+// BUILD NFT with OpenSea links
+function buildNFTs() {
+  document.getElementById('nftGrid').innerHTML = NFTS.map(n => `
+    <div class="nft-card" onclick="window.open('${n.opensea}', '_blank')">
+      <div class="nft-img-wrap">
+        <div class="nft-img-placeholder" style="background:${n.bg}">
+          <span style="font-size:72px;filter:drop-shadow(0 0 20px rgba(255,255,255,0.3))">${n.emoji}</span>
+        </div>
+        <div class="nft-badge">${n.badge}</div>
+        <div class="nft-like">♡ ${Math.floor(Math.random()*400+50)}</div>
+      </div>
+      <div class="nft-info">
+        <div class="nft-name">${n.name}</div>
+        <div class="nft-collection">${n.collection}</div>
+        <div class="nft-bottom">
+          <div>
+            <div class="nft-price-label">Current Price</div>
+            <div class="nft-price-val">${n.price}</div>
+            <div class="nft-price-usd">${n.usd}</div>
+          </div>
+          <button class="btn-bid" onclick="event.stopPropagation(); window.open('${n.opensea}', '_blank')">View on OpenSea</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// BUILD NEWS
+function buildNews() {
+  document.getElementById('newsFeed').innerHTML = NEWS.map(n => `
+    <div class="news-item">
+      <div class="news-tag" style="color:${n.tagColor}">${n.tag}</div>
+      <div class="news-headline">${n.headline}</div>
+      <div class="news-time">${n.time}</div>
+    </div>
+  `).join('');
+}
+
+// DONUT CHART
+function drawDonut() {
+  const canvas = document.getElementById('donutCanvas');
+  const ctx = canvas.getContext('2d');
+  const cx=65, cy=65, r=50, ir=34;
+  let start = -Math.PI/2;
+
+  DONUT.forEach(d => {
+    const angle = (d.pct/100) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, start, start+angle);
+    ctx.closePath();
+    ctx.fillStyle = d.color;
+    ctx.fill();
+    start += angle;
+  });
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, ir, 0, Math.PI*2);
+  ctx.fillStyle = '#0d1219';
+  ctx.fill();
+
+  ctx.fillStyle = '#e8f0fe';
+  ctx.font = 'bold 13px JetBrains Mono, monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('$24.8K', cx, cy-7);
+  ctx.fillStyle = '#3f5a78';
+  ctx.font = '9px JetBrains Mono, monospace';
+  ctx.fillText('PORTFOLIO', cx, cy+10);
+
+  document.getElementById('donutLegend').innerHTML = DONUT.map(d => `
+    <div class="donut-item">
+      <div class="donut-dot" style="background:${d.color}"></div>
+      <div class="donut-name">${d.name}</div>
+      <div class="donut-pct">${d.pct}%</div>
+    </div>
+  `).join('');
+}
+
+// PRICE SIMULATION (fallback)
+function simulatePrices() {
+  CRYPTOS.forEach(c => {
+    const delta = (Math.random()-0.49) * c.price * 0.0008;
+    c.price += delta;
+    const el = document.getElementById('price-'+c.sym);
+    if (!el) return;
+    const price = c.price >= 1000
+      ? '$'+c.price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})
+      : c.price >= 1 ? '$'+c.price.toFixed(2)
+      : '$'+c.price.toFixed(4);
+    el.textContent = price;
+    el.classList.remove('flash-green','flash-red');
+    void el.offsetWidth;
+    el.classList.add(delta>=0?'flash-green':'flash-red');
+  });
+}
+
+// TAB SWITCH
+function switchTab(tab) {
+  const wallet = document.getElementById('walletSection');
+  const nft    = document.getElementById('nftSection');
+  if (tab === 'wallet') {
+    wallet.classList.remove('hidden');
+    nft.classList.remove('active');
+    document.getElementById('tabWallet').classList.add('active');
+    document.getElementById('tabNFT').classList.remove('active');
+  } else {
+    wallet.classList.add('hidden');
+    nft.classList.add('active');
+    document.getElementById('tabNFT').classList.add('active');
+    document.getElementById('tabWallet').classList.remove('active');
+  }
+}
+
+// TICKER JITTER
+function jitterTicker() {
+  FIAT.forEach(f => {
+    if (f.code==='USD') return;
+    f.rate += (Math.random()-0.5)*f.rate*0.0003;
+  });
+  buildTicker();
+}
+
+// CLOCK
+function updateClock() {
+  document.getElementById('clockEl').textContent = new Date().toUTCString().replace('GMT','UTC');
+}
+
+// INIT
+buildTicker();
+renderCryptoList(CRYPTOS);
+buildNFTs();
+buildNews();
+drawDonut();
+updateClock();
+
+fetchBinancePrices();
+setInterval(fetchBinancePrices, 10000);
+setInterval(jitterTicker, 5000);
+setInterval(updateClock, 1000);
+</script>
+</body>
+</html>

@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WFCrypto — Sign In</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:           #080c10;
+    --bg2:          #0d1219;
+    --bg3:          #111820;
+    --surface:      rgba(255,255,255,0.03);
+    --surface2:     rgba(255,255,255,0.055);
+    --border:       rgba(255,255,255,0.07);
+    --border-focus: rgba(0,210,140,0.5);
+    --accent:       #00d28c;
+    --accent2:      #00a8e8;
+    --accent-dim:   rgba(0,210,140,0.12);
+    --accent-glow:  rgba(0,210,140,0.22);
+    --red:          #ff4d6a;
+    --red-dim:      rgba(255,77,106,0.12);
+    --amber:        #f5a623;
+    --text:         #e8edf5;
+    --muted:        #4a5568;
+    --muted2:       #718096;
+    --syne:         'Syne', sans-serif;
+    --mono:         'JetBrains Mono', monospace;
+    --sans:         'DM Sans', sans-serif;
+  }
+
+  html, body { min-height: 100vh; background: var(--bg); color: var(--text); font-family: var(--sans); overflow-x: hidden; }
+
+  /* GRID */
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,210,140,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,210,140,0.035) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none; z-index: 0;
+  }
+
+  /* ORBS */
+  .orb { position: fixed; border-radius: 50%; filter: blur(90px); pointer-events: none; z-index: 0; }
+  .orb-tl {
+    width: 520px; height: 520px; top: -160px; left: -160px;
+    background: radial-gradient(circle, rgba(0,210,140,0.07) 0%, transparent 70%);
+    animation: orbF 20s ease-in-out infinite;
+  }
+  .orb-br {
+    width: 420px; height: 420px; bottom: -130px; right: -110px;
+    background: radial-gradient(circle, rgba(0,168,232,0.07) 0%, transparent 70%);
+    animation: orbF 24s ease-in-out infinite reverse;
+  }
+  .orb-c {
+    width: 280px; height: 280px; top: 45%; left: 55%;
+    background: radial-gradient(circle, rgba(0,210,140,0.04) 0%, transparent 70%);
+    animation: orbF 16s ease-in-out infinite 3s;
+  }
+  @keyframes orbF {
+    0%,100% { transform: translate(0,0) scale(1); }
+    33%     { transform: translate(28px,-22px) scale(1.04); }
+    66%     { transform: translate(-18px,26px) scale(0.97); }
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* NAV */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    border-bottom: 1px solid var(--border);
+    background: rgba(8,12,16,0.82);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  }
+  .nav-inner {
+    max-width: 1280px; margin: 0 auto; padding: 0 24px;
+    display: flex; align-items: center; height: 58px; gap: 20px;
+  }
+  .logo { font-family: var(--mono); font-size: 17px; font-weight: 700; color: var(--accent); letter-spacing: 2px; text-decoration: none; }
+  .logo span { color: var(--text); opacity: 0.35; }
+  .nav-crumb { font-family: var(--mono); font-size: 11px; color: var(--muted2); letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; }
+  .nav-crumb::before { content: '/'; color: var(--muted); }
+  .nav-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+  .live-dot { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 10px; color: var(--accent); letter-spacing: 1px; }
+  .live-dot::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.4; transform:scale(0.75); } }
+  .btn-sm {
+    padding: 7px 16px; border-radius: 8px; font-size: 12px; font-weight: 600;
+    cursor: pointer; font-family: var(--sans); transition: all 0.2s;
+    border: 1px solid var(--border); background: none; color: var(--muted2);
+    text-decoration: none; display: inline-flex; align-items: center;
+  }
+  .btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-sm.primary { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 700; }
+  .btn-sm.primary:hover { box-shadow: 0 0 18px var(--accent-glow); }
+
+  /* TICKER */
+  .ticker-wrap { border-bottom: 1px solid var(--border); background: rgba(13,18,25,0.7); overflow: hidden; position: relative; z-index: 1; height: 38px; }
+  .ticker-label {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    display: flex; align-items: center; padding: 0 14px;
+    background: linear-gradient(90deg, var(--bg2) 65%, transparent);
+    z-index: 2; font-family: var(--mono); font-size: 9px;
+    color: var(--accent); letter-spacing: 1.5px; font-weight: 600; gap: 7px; white-space: nowrap;
+  }
+  .ticker-label .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); animation: pulse 1.5s infinite; }
+  .ticker-track { display: flex; animation: ticker 38s linear infinite; padding-left: 110px; }
+  .ticker-track:hover { animation-play-state: paused; }
+  @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+  .ticker-item { display: flex; align-items: center; gap: 8px; padding: 0 22px; height: 38px; border-right: 1px solid var(--border); white-space: nowrap; flex-shrink: 0; }
+  .t-flag { font-size: 15px; line-height: 1; }
+  .t-code { font-family: var(--mono); font-size: 10px; color: var(--muted2); letter-spacing: 0.5px; }
+  .t-rate { font-family: var(--mono); font-size: 12px; font-weight: 600; }
+  .t-chg  { font-family: var(--mono); font-size: 10px; font-weight: 600; padding: 1px 5px; border-radius: 3px; }
+  .up { color: var(--accent); background: var(--accent-dim); }
+  .dn { color: var(--red);    background: var(--red-dim); }
+
+  /* PAGE */
+  .page {
+    position: relative; z-index: 1;
+    min-height: calc(100vh - 96px - 38px);
+    display: flex; align-items: center; justify-content: center;
+    padding: 40px 16px;
+  }
+
+  /* CARD */
+  .card {
+    width: 100%; max-width: 420px;
+    background: rgba(13,18,25,0.78);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px;
+    backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+    box-shadow: 0 0 0 1px rgba(0,210,140,0.04), 0 40px 80px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06);
+    overflow: hidden;
+    animation: cardIn 0.5s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  @keyframes cardIn { from { opacity:0; transform:translateY(22px) scale(0.98); } to { opacity:1; transform:translateY(0) scale(1); } }
+
+  .card-accent { height: 2px; background: linear-gradient(90deg, transparent 0%, var(--accent) 40%, var(--accent2) 70%, transparent 100%); }
+
+  /* CARD HEAD */
+  .card-head { padding: 28px 32px 22px; text-align: center; border-bottom: 1px solid var(--border); }
+  .card-logo { font-family: var(--mono); font-size: 14px; font-weight: 700; color: var(--accent); letter-spacing: 2px; margin-bottom: 16px; display: block; }
+  .card-logo span { color: var(--text); opacity: 0.4; }
+  .card-title { font-family: var(--syne); font-size: 26px; font-weight: 800; color: var(--text); letter-spacing: -0.5px; line-height: 1.1; margin-bottom: 6px; }
+  .card-title em { font-style: normal; color: var(--accent); }
+  .card-sub { font-size: 13px; color: var(--muted2); line-height: 1.5; }
+
+  /* session token display */
+  .session-token {
+    margin-top: 14px;
+    display: inline-flex; align-items: center; gap: 7px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 6px; padding: 5px 11px;
+    font-family: var(--mono); font-size: 10px; color: var(--muted2);
+    letter-spacing: 0.5px;
+  }
+  .session-token .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); animation: pulse 2s infinite; }
+
+  /* FORM BODY */
+  .card-body { padding: 26px 32px; }
+
+  .field { margin-bottom: 18px; animation: fieldIn 0.4s ease both; }
+  .field:nth-child(1) { animation-delay: 0.07s; }
+  .field:nth-child(2) { animation-delay: 0.13s; }
+  @keyframes fieldIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+  .field-label { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 10px; color: var(--muted2); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 7px; }
+
+  .input-wrap { position: relative; display: flex; align-items: center; }
+  .input-icon { position: absolute; left: 14px; color: var(--muted); pointer-events: none; transition: color 0.2s; display: flex; align-items: center; }
+  .input-wrap:focus-within .input-icon { color: var(--accent); }
+
+  input[type="text"], input[type="email"], input[type="password"] {
+    width: 100%; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 14px 12px 42px;
+    color: var(--text); font-family: var(--sans); font-size: 14px;
+    outline: none; transition: all 0.2s; -webkit-appearance: none;
+  }
+  input::placeholder { color: var(--muted); }
+  input:focus { border-color: var(--border-focus); background: rgba(0,210,140,0.03); box-shadow: 0 0 0 3px rgba(0,210,140,0.08); }
+  input.error { border-color: var(--red) !important; background: rgba(255,77,106,0.04) !important; box-shadow: 0 0 0 3px rgba(255,77,106,0.08) !important; }
+  input.valid { border-color: rgba(0,210,140,0.35) !important; }
+
+  .toggle-pw { position: absolute; right: 12px; background: none; border: none; cursor: pointer; color: var(--muted); padding: 4px; transition: color 0.2s; display: flex; align-items: center; }
+  .toggle-pw:hover { color: var(--accent); }
+
+  .field-error { margin-top: 6px; font-family: var(--mono); font-size: 11px; color: var(--red); display: flex; align-items: center; gap: 5px; min-height: 16px; opacity: 0; transform: translateY(-4px); transition: all 0.2s; }
+  .field-error.show { opacity: 1; transform: translateY(0); }
+
+  /* REMEMBER ROW */
+  .meta-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; animation: fieldIn 0.4s 0.19s ease both; }
+  .check-row { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+  input[type="checkbox"] { appearance: none; -webkit-appearance: none; width: 17px; height: 17px; min-width: 17px; border: 1px solid var(--border); border-radius: 5px; background: var(--surface); padding: 0; cursor: pointer; transition: all 0.2s; position: relative; }
+  input[type="checkbox"]:checked { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 10px var(--accent-glow); }
+  input[type="checkbox"]:checked::after { content: ''; position: absolute; left: 3px; top: 1px; width: 5px; height: 8px; border: 2px solid #000; border-top: none; border-left: none; transform: rotate(45deg); }
+  .check-label { font-size: 13px; color: var(--muted2); }
+  .forgot-link { font-size: 12px; color: var(--accent); text-decoration: none; font-family: var(--mono); letter-spacing: 0.3px; transition: opacity 0.2s; }
+  .forgot-link:hover { opacity: 0.7; text-decoration: underline; }
+
+  /* GLOBAL ERROR BANNER */
+  .global-err {
+    display: none; align-items: center; gap: 10px;
+    background: var(--red-dim); border: 1px solid rgba(255,77,106,0.3);
+    border-radius: 10px; padding: 11px 14px; margin-bottom: 18px;
+    font-family: var(--mono); font-size: 11px; color: var(--red);
+    animation: shake 0.4s ease;
+  }
+  .global-err.show { display: flex; }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    20%,60% { transform: translateX(-6px); }
+    40%,80% { transform: translateX(6px); }
+  }
+
+  /* SUBMIT */
+  .btn-submit {
+    width: 100%; padding: 14px; border-radius: 12px; border: none;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+    color: #000; font-family: var(--syne); font-size: 15px; font-weight: 700; letter-spacing: 0.3px;
+    cursor: pointer; transition: all 0.25s; position: relative; overflow: hidden;
+    animation: fieldIn 0.4s 0.24s ease both;
+  }
+  .btn-submit::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 60%); opacity: 0; transition: opacity 0.2s; }
+  .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,210,140,0.38), 0 2px 12px rgba(0,168,232,0.22); }
+  .btn-submit:hover::before { opacity: 1; }
+  .btn-submit:active { transform: translateY(0); }
+  .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+  .btn-submit .spinner { display: none; width: 18px; height: 18px; border: 2px solid rgba(0,0,0,0.3); border-top-color: #000; border-radius: 50%; animation: spin 0.6s linear infinite; margin: 0 auto; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .btn-submit.loading .btn-text { display: none; }
+  .btn-submit.loading .spinner { display: block; }
+
+  /* DIVIDER */
+  .divider { display: flex; align-items: center; gap: 14px; margin: 22px 0; animation: fieldIn 0.4s 0.29s ease both; }
+  .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .divider span { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 1px; white-space: nowrap; }
+
+  /* SOCIAL */
+  .social-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; animation: fieldIn 0.4s 0.34s ease both; }
+  .social-btn { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 16px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); color: var(--muted2); font-size: 13px; font-weight: 600; cursor: pointer; font-family: var(--sans); transition: all 0.2s; }
+  .social-btn:hover { border-color: rgba(255,255,255,0.18); color: var(--text); background: var(--surface2); }
+  .social-btn .spinner { display: none; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.15); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.6s linear infinite; }
+
+  /* CARD FOOT */
+  .card-foot { padding: 18px 32px 22px; text-align: center; border-top: 1px solid var(--border); animation: fieldIn 0.4s 0.39s ease both; }
+  .card-foot p { font-size: 13px; color: var(--muted2); }
+  .card-foot a { color: var(--accent); text-decoration: none; font-weight: 600; }
+  .card-foot a:hover { text-decoration: underline; }
+
+  /* SUCCESS */
+  .success-overlay { display: none; flex-direction: column; align-items: center; justify-content: center; padding: 52px 32px; text-align: center; }
+  .success-overlay.show { display: flex; animation: cardIn 0.4s ease both; }
+  .success-icon { width: 72px; height: 72px; border-radius: 50%; background: var(--accent-dim); border: 2px solid var(--accent); display: flex; align-items: center; justify-content: center; margin-bottom: 20px; box-shadow: 0 0 40px var(--accent-glow); animation: pop 0.5s cubic-bezier(0.34,1.56,0.64,1) both; }
+  @keyframes pop { from { transform:scale(0.3); opacity:0; } to { transform:scale(1); opacity:1; } }
+  .success-title { font-family: var(--syne); font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 8px; }
+  .success-sub { font-size: 14px; color: var(--muted2); line-height: 1.6; margin-bottom: 24px; }
+  .countdown { font-family: var(--mono); font-size: 11px; color: var(--accent); letter-spacing: 1px; }
+  .progress-bar { width: 100%; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; margin-top: 8px; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 2px; animation: drain 3s linear forwards; }
+  @keyframes drain { from { width:100%; } to { width:0%; } }
+
+  /* 2FA PANEL */
+  .twofa-panel { display: none; padding: 28px 32px; text-align: center; }
+  .twofa-panel.show { display: block; animation: cardIn 0.35s ease both; }
+  .twofa-title { font-family: var(--syne); font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+  .twofa-sub { font-size: 13px; color: var(--muted2); margin-bottom: 24px; line-height: 1.5; }
+  .otp-row { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
+  .otp-digit {
+    width: 46px; height: 54px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--surface);
+    color: var(--text); font-family: var(--mono); font-size: 22px; font-weight: 700;
+    text-align: center; outline: none; transition: all 0.2s;
+    -webkit-appearance: none;
+  }
+  .otp-digit:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px rgba(0,210,140,0.1); background: rgba(0,210,140,0.03); }
+  .otp-digit.filled { border-color: rgba(0,210,140,0.4); color: var(--accent); }
+  .twofa-hint { font-family: var(--mono); font-size: 11px; color: var(--muted2); margin-bottom: 20px; }
+  .twofa-hint a { color: var(--accent); cursor: pointer; text-decoration: none; }
+  .twofa-hint a:hover { text-decoration: underline; }
+  .btn-verify {
+    width: 100%; padding: 13px; border-radius: 12px; border: none;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #000; font-family: var(--syne); font-size: 14px; font-weight: 700;
+    cursor: pointer; transition: all 0.2s; opacity: 0.4; pointer-events: none;
+  }
+  .btn-verify.active { opacity: 1; pointer-events: auto; }
+  .btn-verify.active:hover { box-shadow: 0 6px 24px rgba(0,210,140,0.35); transform: translateY(-1px); }
+
+  /* STATUS BAR */
+  .statusbar { position: relative; z-index: 1; border-top: 1px solid var(--border); background: rgba(8,12,16,0.9); backdrop-filter: blur(12px); height: 36px; display: flex; align-items: center; }
+  .sb-inner { max-width: 1280px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; gap: 24px; width: 100%; overflow: hidden; }
+  .sb-item { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 9px; color: var(--muted2); letter-spacing: 0.8px; white-space: nowrap; flex-shrink: 0; }
+  .sb-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+  .sb-green { background: var(--accent); box-shadow: 0 0 6px var(--accent-glow); }
+  .sb-blue  { background: var(--accent2); }
+  .sb-amber { background: var(--amber); }
+  .sb-sep { width: 1px; height: 16px; background: var(--border); flex-shrink: 0; }
+
+  /* RESPONSIVE */
+  @media (max-width: 480px) {
+    .card-head, .card-body, .card-foot, .twofa-panel { padding-left: 20px; padding-right: 20px; }
+    .card-title { font-size: 22px; }
+    .social-row { grid-template-columns: 1fr; }
+    .otp-digit { width: 40px; height: 48px; font-size: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="orb orb-tl"></div>
+<div class="orb orb-br"></div>
+<div class="orb orb-c"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <a href="#" class="logo">WFC<span>●</span>RYPTO</a>
+    <div class="nav-crumb">Sign In</div>
+    <div class="nav-right">
+      <div class="live-dot">LIVE</div>
+      <a href="register.html" class="btn-sm">Register</a>
+      <a href="crypto-platform.html" class="btn-sm primary">Dashboard →</a>
+    </div>
+  </div>
+</nav>
+
+<!-- TICKER -->
+<div class="ticker-wrap">
+  <div class="ticker-label">FX RATES <div class="dot"></div></div>
+  <div class="ticker-track" id="tickerTrack"></div>
+</div>
+
+<!-- PAGE -->
+<div class="page">
+  <div class="card" id="mainCard">
+    <div class="card-accent"></div>
+
+    <!-- HEAD -->
+    <div class="card-head" id="headSection">
+      <span class="card-logo">WFC<span>●</span>RYPTO</span>
+      <h1 class="card-title">Welcome <em>Back</em></h1>
+      <p class="card-sub">Sign in to access your portfolio and trade</p>
+      <div class="session-token">
+        <div class="dot"></div>
+        SESSION: <span id="sessionId"></span>
+      </div>
+    </div>
+
+    <!-- FORM -->
+    <div class="card-body" id="formSection">
+      <form id="loginForm" novalidate>
+
+        <!-- Global error -->
+        <div class="global-err" id="globalErr">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span id="globalErrMsg">Invalid credentials. Please try again.</span>
+        </div>
+
+        <!-- Email / Username -->
+        <div class="field">
+          <div class="field-label">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Email or Username
+          </div>
+          <div class="input-wrap">
+            <span class="input-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </span>
+            <input type="text" id="identifier" placeholder="satoshi@bitcoin.org" autocomplete="username" oninput="clearGlobal(); liveValidate('identifier')">
+          </div>
+          <div class="field-error" id="err-identifier">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span id="err-identifier-msg"></span>
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="field">
+          <div class="field-label">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Password
+          </div>
+          <div class="input-wrap">
+            <span class="input-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </span>
+            <input type="password" id="password" placeholder="Your password" autocomplete="current-password" oninput="clearGlobal(); liveValidate('password')">
+            <button type="button" class="toggle-pw" onclick="togglePw(this)" aria-label="Show/hide password">
+              <svg class="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+          <div class="field-error" id="err-password">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span id="err-password-msg"></span>
+          </div>
+        </div>
+
+        <!-- Remember / Forgot -->
+        <div class="meta-row">
+          <label class="check-row">
+            <input type="checkbox" id="remember" checked>
+            <span class="check-label" style="font-size:13px;color:var(--muted2);">Remember me</span>
+          </label>
+          <a href="#" class="forgot-link" onclick="showForgot(event)">Forgot password?</a>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" class="btn-submit" id="submitBtn">
+          <span class="btn-text">Sign In →</span>
+          <div class="spinner"></div>
+        </button>
+
+      </form>
+
+      <!-- Divider -->
+      <div class="divider"><span>OR CONTINUE WITH</span></div>
+
+      <!-- Social -->
+      <div class="social-row">
+        <button class="social-btn" id="gBtn" onclick="socialLogin('Google', this)">
+          <svg class="social-icon" width="16" height="16" viewBox="0 0 24 24"><path fill="#EA4335" d="M5.26 9.77A7.06 7.06 0 0 1 12 5.13c1.8 0 3.42.65 4.7 1.7l3.5-3.5A12 12 0 0 0 0 12c0 1.99.49 3.87 1.35 5.52l3.91-3.06A7.06 7.06 0 0 1 5.26 9.77z"/><path fill="#FBBC05" d="M12 24c3.24 0 5.95-1.08 7.93-2.93l-3.67-3.01A7.2 7.2 0 0 1 12 19.07a7.06 7.06 0 0 1-6.74-4.99L1.35 17.52A12 12 0 0 0 12 24z"/><path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.55-.2-2.27H12v4.51h6.47a5.6 5.6 0 0 1-2.4 3.66l3.67 3.01C21.8 19.01 23.49 15.87 23.49 12.27z"/><path fill="#34A853" d="M5.26 14.23A7.2 7.2 0 0 1 4.93 12c0-.77.13-1.52.33-2.23L1.35 6.48A12.05 12.05 0 0 0 0 12c0 1.99.49 3.87 1.35 5.52l3.91-3.29z"/></svg>
+          <span class="social-label">Google</span>
+          <div class="spinner"></div>
+        </button>
+        <button class="social-btn" id="ghBtn" onclick="socialLogin('GitHub', this)">
+          <svg class="social-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.2 11.38.6.1.82-.26.82-.58v-2.03c-3.34.72-4.04-1.61-4.04-1.61-.54-1.38-1.33-1.75-1.33-1.75-1.09-.74.08-.73.08-.73 1.2.09 1.84 1.24 1.84 1.24 1.07 1.83 2.8 1.3 3.49 1 .11-.78.42-1.31.76-1.61-2.66-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23A11.5 11.5 0 0 1 12 6.8c1.02 0 2.04.14 3 .4 2.28-1.55 3.3-1.23 3.3-1.23.66 1.66.25 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.63-5.49 5.92.43.37.82 1.1.82 2.22v3.29c0 .32.21.69.83.57C20.57 21.8 24 17.3 24 12 24 5.37 18.63 0 12 0z"/></svg>
+          <span class="social-label">GitHub</span>
+          <div class="spinner"></div>
+        </button>
+      </div>
+    </div>
+
+    <!-- 2FA PANEL (shown after creds pass) -->
+    <div class="twofa-panel" id="twofaSection">
+      <div style="font-size:32px;margin-bottom:14px;">🔐</div>
+      <div class="twofa-title">Two-Factor Auth</div>
+      <div class="twofa-sub">Enter the 6-digit code from your authenticator app or use demo code <strong style="color:var(--accent);font-family:var(--mono);">000000</strong></div>
+      <div class="otp-row" id="otpRow">
+        <input class="otp-digit" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]">
+        <input class="otp-digit" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]">
+        <input class="otp-digit" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]">
+        <input class="otp-digit" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]">
+        <input class="otp-digit" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]">
+        <input class="otp-digit" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]">
+      </div>
+      <div class="twofa-hint">Didn't receive? <a onclick="resetOtp()">Resend code</a> · <a onclick="backToForm()">← Back</a></div>
+      <button class="btn-verify" id="verifyBtn" onclick="verify2FA()">Verify & Sign In →</button>
+    </div>
+
+    <!-- SUCCESS -->
+    <div class="success-overlay" id="successSection">
+      <div class="success-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#00d28c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="success-title">Signed In!</div>
+      <div class="success-sub">Identity verified. Loading your portfolio and market data…</div>
+      <div class="countdown" id="countdownText">Redirecting to dashboard in 3s…</div>
+      <div class="progress-bar"><div class="progress-fill"></div></div>
+    </div>
+
+    <!-- FORGOT PASSWORD -->
+    <div class="twofa-panel" id="forgotSection">
+      <div style="font-size:30px;margin-bottom:14px;">📬</div>
+      <div class="twofa-title">Reset Password</div>
+      <div class="twofa-sub">Enter your email and we'll send a secure reset link to your inbox.</div>
+      <div class="input-wrap" style="margin-bottom:14px;">
+        <span class="input-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>
+        <input type="email" id="resetEmail" placeholder="your@email.com" style="padding-left:42px;">
+      </div>
+      <button class="btn-verify active" style="margin-bottom:12px;" onclick="sendReset()">Send Reset Link</button>
+      <div class="twofa-hint"><a onclick="backToForm()">← Back to Sign In</a></div>
+    </div>
+
+    <!-- FOOT -->
+    <div class="card-foot" id="footSection">
+      <p>Don't have an account? <a href="register.html">Sign Up →</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- STATUS BAR -->
+<div class="statusbar">
+  <div class="sb-inner">
+    <div class="sb-item"><div class="sb-dot sb-green"></div>AUTH SERVER OK</div>
+    <div class="sb-sep"></div>
+    <div class="sb-item"><div class="sb-dot sb-green"></div>256-BIT SSL</div>
+    <div class="sb-sep"></div>
+    <div class="sb-item"><div class="sb-dot sb-blue"></div>LATENCY: <span id="latency" style="margin-left:3px;">14ms</span></div>
+    <div class="sb-sep"></div>
+    <div class="sb-item"><div class="sb-dot sb-green"></div>2FA ENABLED</div>
+    <div class="sb-sep"></div>
+    <div class="sb-item"><div class="sb-dot sb-amber"></div>LOGINS TODAY: 48.2K</div>
+    <div class="sb-sep"></div>
+    <div class="sb-item" id="sbTime"></div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────
+// DEMO CREDENTIALS  (accepted logins)
+// ─────────────────────────────────────────────────────────
+const VALID = [
+  { id: 'demo@wfcrypto.io',     pw: 'Demo1234!' },
+  { id: 'admin',             pw: 'admin' },
+  { id: 'satoshi@bitcoin.org', pw: 'bitcoin' },
+];
+
+// ─────────────────────────────────────────────────────────
+// TICKER
+// ─────────────────────────────────────────────────────────
+const FX = [
+  {flag:'🇺🇸',code:'USD',rate:'1.0000',chg:'+0.00%',dir:'up'},
+  {flag:'🇪🇺',code:'EUR',rate:'0.9184',chg:'-0.12%',dir:'dn'},
+  {flag:'🇷🇺',code:'RUB',rate:'89.74', chg:'+0.43%',dir:'up'},
+  {flag:'🇦🇲',code:'AMD',rate:'388.52',chg:'+0.09%',dir:'up'},
+  {flag:'🇬🇧',code:'GBP',rate:'0.7891',chg:'-0.08%',dir:'dn'},
+  {flag:'🇯🇵',code:'JPY',rate:'149.38',chg:'+0.22%',dir:'up'},
+  {flag:'🇨🇳',code:'CNY',rate:'7.2431',chg:'-0.05%',dir:'dn'},
+  {flag:'🇨🇭',code:'CHF',rate:'0.8810',chg:'+0.11%',dir:'up'},
+  {flag:'🇨🇦',code:'CAD',rate:'1.3672',chg:'+0.03%',dir:'up'},
+  {flag:'🇦🇺',code:'AUD',rate:'1.5261',chg:'-0.07%',dir:'dn'},
+  {flag:'🇸🇬',code:'SGD',rate:'1.3419',chg:'+0.15%',dir:'up'},
+];
+(function() {
+  const track = document.getElementById('tickerTrack');
+  track.innerHTML = [...FX,...FX].map(c=>`
+    <div class="ticker-item">
+      <span class="t-flag">${c.flag}</span>
+      <span class="t-code">${c.code}</span>
+      <span class="t-rate">${c.rate}</span>
+      <span class="t-chg ${c.dir}">${c.chg}</span>
+    </div>`).join('');
+})();
+
+// ─────────────────────────────────────────────────────────
+// SESSION TOKEN (decorative)
+// ─────────────────────────────────────────────────────────
+document.getElementById('sessionId').textContent =
+  Math.random().toString(36).slice(2,7).toUpperCase() + '-' +
+  Math.random().toString(36).slice(2,7).toUpperCase();
+
+// ─────────────────────────────────────────────────────────
+// STATUS BAR
+// ─────────────────────────────────────────────────────────
+function updateClock() {
+  const t = new Date().toUTCString().match(/\d{2}:\d{2}:\d{2}/)[0];
+  document.getElementById('sbTime').textContent = 'UTC ' + t;
+}
+updateClock(); setInterval(updateClock, 1000);
+
+// Flicker latency
+setInterval(() => {
+  document.getElementById('latency').textContent = (10 + Math.floor(Math.random()*18)) + 'ms';
+}, 3000);
+
+// ─────────────────────────────────────────────────────────
+// TOGGLE PASSWORD
+// ─────────────────────────────────────────────────────────
+function togglePw(btn) {
+  const inp = document.getElementById('password');
+  const hidden = inp.type === 'password';
+  inp.type = hidden ? 'text' : 'password';
+  btn.querySelector('svg').innerHTML = hidden
+    ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'
+    : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+}
+
+// ─────────────────────────────────────────────────────────
+// FIELD VALIDATION
+// ─────────────────────────────────────────────────────────
+function showErr(field, msg) {
+  const el = document.getElementById(field);
+  const errWrap = document.getElementById('err-' + field);
+  const msgEl   = document.getElementById('err-' + field + '-msg');
+  el.classList.add('error'); el.classList.remove('valid');
+  if (msgEl) msgEl.textContent = msg;
+  errWrap.classList.add('show');
+  return false;
+}
+function clearErr(field) {
+  const el = document.getElementById(field);
+  const errWrap = document.getElementById('err-' + field);
+  el.classList.remove('error'); el.classList.add('valid');
+  errWrap.classList.remove('show');
+  return true;
+}
+function clearGlobal() { document.getElementById('globalErr').classList.remove('show'); }
+
+function liveValidate(field) {
+  const val = document.getElementById(field).value.trim();
+  if (field === 'identifier') {
+    if (!val) return; // only validate on submit if empty
+    return clearErr(field);
+  }
+  if (field === 'password') {
+    if (!val) return;
+    return clearErr(field);
+  }
+}
+
+function validateLogin() {
+  const id = document.getElementById('identifier').value.trim();
+  const pw = document.getElementById('password').value;
+  let ok = true;
+  if (!id) { showErr('identifier','Email or username is required'); ok=false; }
+  else clearErr('identifier');
+  if (!pw) { showErr('password','Password is required'); ok=false; }
+  else clearErr('password');
+  return ok;
+}
+
+// ─────────────────────────────────────────────────────────
+// FORM SUBMIT
+// ─────────────────────────────────────────────────────────
+document.getElementById('loginForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  if (!validateLogin()) return;
+
+  const id = document.getElementById('identifier').value.trim().toLowerCase();
+  const pw = document.getElementById('password').value;
+
+  const btn = document.getElementById('submitBtn');
+  btn.classList.add('loading'); btn.disabled = true;
+
+  setTimeout(() => {
+    btn.classList.remove('loading'); btn.disabled = false;
+
+    // Check credentials
+    const match = VALID.find(v => v.id.toLowerCase() === id && v.pw === pw);
+    if (!match) {
+      document.getElementById('globalErrMsg').textContent =
+        'Invalid credentials. Try demo@wfcrypto.io / Demo1234! or admin / admin';
+      document.getElementById('globalErr').classList.add('show');
+      document.getElementById('identifier').classList.add('error');
+      document.getElementById('password').classList.add('error');
+      // shake card
+      document.getElementById('mainCard').style.animation = 'none';
+      document.getElementById('mainCard').offsetHeight;
+      return;
+    }
+
+    // Valid — show 2FA
+    document.getElementById('formSection').style.display = 'none';
+    document.getElementById('headSection').style.display = 'none';
+    document.getElementById('footSection').style.display = 'none';
+    document.getElementById('twofaSection').classList.add('show');
+    setTimeout(() => document.querySelector('.otp-digit').focus(), 100);
+  }, 1400);
+});
+
+// ─────────────────────────────────────────────────────────
+// OTP INPUT
+// ─────────────────────────────────────────────────────────
+(function setupOtp() {
+  const digits = document.querySelectorAll('.otp-digit');
+  digits.forEach((inp, i) => {
+    inp.addEventListener('input', () => {
+      inp.value = inp.value.replace(/[^0-9]/g,'').slice(-1);
+      if (inp.value) { inp.classList.add('filled'); if (i < digits.length-1) digits[i+1].focus(); }
+      else inp.classList.remove('filled');
+      checkOtpComplete();
+    });
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Backspace' && !inp.value && i > 0) digits[i-1].focus();
+    });
+    inp.addEventListener('paste', e => {
+      e.preventDefault();
+      const txt = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g,'').slice(0,6);
+      txt.split('').forEach((ch,j) => { if(digits[i+j]) { digits[i+j].value=ch; digits[i+j].classList.add('filled'); } });
+      const next = Math.min(i + txt.length, digits.length-1);
+      digits[next].focus();
+      checkOtpComplete();
+    });
+  });
+})();
+
+function checkOtpComplete() {
+  const digits = document.querySelectorAll('.otp-digit');
+  const full = [...digits].every(d => d.value.length === 1);
+  document.getElementById('verifyBtn').classList.toggle('active', full);
+}
+
+function verify2FA() {
+  const code = [...document.querySelectorAll('.otp-digit')].map(d=>d.value).join('');
+  const btn = document.getElementById('verifyBtn');
+  btn.textContent = 'Verifying…'; btn.disabled = true;
+
+  setTimeout(() => {
+    if (code !== '000000' && code.length === 6 && !/^(\d)\1{5}$/.test(code) === false) {
+      // wrong code
+    }
+    // Accept any 6-digit code for demo (or 000000)
+    showSuccess();
+  }, 1200);
+}
+
+function resetOtp() {
+  document.querySelectorAll('.otp-digit').forEach(d => { d.value=''; d.classList.remove('filled'); });
+  document.getElementById('verifyBtn').classList.remove('active');
+  document.querySelector('.otp-digit').focus();
+}
+
+function backToForm() {
+  document.getElementById('twofaSection').classList.remove('show');
+  document.getElementById('forgotSection').classList.remove('show');
+  document.getElementById('formSection').style.display = '';
+  document.getElementById('headSection').style.display = '';
+  document.getElementById('footSection').style.display = '';
+}
+
+// ─────────────────────────────────────────────────────────
+// SUCCESS
+// ─────────────────────────────────────────────────────────
+function showSuccess() {
+  document.getElementById('twofaSection').classList.remove('show');
+  document.getElementById('headSection').style.display = 'none';
+  document.getElementById('footSection').style.display = 'none';
+  const succ = document.getElementById('successSection');
+  succ.classList.add('show');
+
+  let secs = 3;
+  const iv = setInterval(() => {
+    secs--;
+    document.getElementById('countdownText').textContent =
+      secs > 0 ? `Redirecting to dashboard in ${secs}s…` : 'Redirecting…';
+    if (secs <= 0) {
+      clearInterval(iv);
+      setTimeout(() => {
+        document.getElementById('countdownText').textContent =
+          '✓ In a real app you would now land on the main dashboard.';
+      }, 800);
+    }
+  }, 1000);
+}
+
+// ─────────────────────────────────────────────────────────
+// FORGOT PASSWORD
+// ─────────────────────────────────────────────────────────
+function showForgot(e) {
+  e && e.preventDefault();
+  document.getElementById('formSection').style.display = 'none';
+  document.getElementById('headSection').style.display = 'none';
+  document.getElementById('footSection').style.display = 'none';
+  document.getElementById('forgotSection').classList.add('show');
+}
+
+function sendReset() {
+  const email = document.getElementById('resetEmail').value.trim();
+  const btn = document.querySelector('#forgotSection .btn-verify');
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    document.getElementById('resetEmail').classList.add('error');
+    return;
+  }
+  btn.textContent = 'Sending…'; btn.disabled = true;
+  setTimeout(() => {
+    btn.textContent = '✓ Link Sent!';
+    btn.style.background = 'var(--accent-dim)';
+    btn.style.color = 'var(--accent)';
+    btn.style.border = '1px solid var(--accent)';
+    document.querySelector('#forgotSection .twofa-sub').textContent =
+      `A reset link was sent to ${email}. Check your inbox.`;
+  }, 1500);
+}
+
+// ─────────────────────────────────────────────────────────
+// SOCIAL LOGIN
+// ─────────────────────────────────────────────────────────
+function socialLogin(provider, btn) {
+  const icon = btn.querySelector('.social-icon');
+  const label = btn.querySelector('.social-label');
+  const spin = btn.querySelector('.spinner');
+  icon.style.display = 'none'; label.style.display = 'none'; spin.style.display = 'block';
+  btn.disabled = true;
+  setTimeout(() => {
+    icon.style.display = ''; label.style.display = ''; spin.style.display = 'none';
+    btn.disabled = false;
+    btn.style.borderColor = 'var(--accent)'; btn.style.color = 'var(--accent)';
+    setTimeout(() => { btn.style.borderColor=''; btn.style.color=''; }, 2500);
+  }, 1600);
+}
+</script>
+</body>
+</html>
